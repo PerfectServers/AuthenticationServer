@@ -63,6 +63,12 @@ fastlane/report.xml
 fastlane/screenshots
 
 Packages/
-PerfectTemplate.xcodeproj
+*.xcodeproj
 Tests/
 webroot/
+Package.swift.orig
+buildlinux
+.packages_lin
+*.log
+StORMlog.txt
+ApplicationConfiguration.json
