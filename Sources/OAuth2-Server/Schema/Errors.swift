@@ -6,6 +6,6 @@
 //
 //
 
-public enum OAuth2ServerError {
-	case noError, registerError
+public enum OAuth2ServerError: Error {
+	case noError, registerError, loginError
 }

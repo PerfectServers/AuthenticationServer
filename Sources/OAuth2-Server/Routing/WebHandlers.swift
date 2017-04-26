@@ -8,7 +8,8 @@
 
 import PerfectHTTP
 import PerfectSession
-import TurnstileCrypto
+import PerfectCrypto
+import PerfectSessionPostgreSQL
 
 
 class WebHandlers {
@@ -18,6 +19,7 @@ class WebHandlers {
 			request, response in
 			var context: [String : Any] = ["title": "Perfect Authentication Server"]
 			if let i = request.session?.userid, !i.isEmpty { context["authenticated"] = true }
+			context["csrfToken"] = request.session?.data["csrf"] as? String ?? ""
 			response.render(template: "views/index", context: context)
 		}
 	}
@@ -25,7 +27,7 @@ class WebHandlers {
 		return {
 			request, response in
 			if let _ = request.session?.token {
-				MemorySessions.destroy(request, response)
+				PostgresSessions().destroy(request, response)
 				request.session = PerfectSession()
 				response.request.session = PerfectSession()
 			}
@@ -70,6 +72,37 @@ class WebHandlers {
 
 			}
 			response.render(template: "views/msg", context: context)
+		}
+	}
+
+	// POST request for login
+	static func login(data: [String:Any]) throws -> RequestHandler {
+		return {
+			request, response in
+			var template = "views/msg" // where it goes to after
+			if let i = request.session?.userid, !i.isEmpty { response.redirect(path: "/") }
+			var context: [String : Any] = ["title": "Perfect Authentication Server"]
+			context["csrfToken"] = request.session?.data["csrf"] as? String ?? ""
+
+			if let u = request.param(name: "username"), !(u as String).isEmpty,
+				let p = request.param(name: "password"), !(p as String).isEmpty {
+				do {
+					let acc = try Account.login(u, p)
+					request.session?.userid = acc.id
+					context["msg_title"] = "Login Successful."
+					context["msg_body"] = ""
+					response.redirect(path: "/")
+				} catch {
+					context["msg_title"] = "Login Error."
+					context["msg_body"] = "Username or password incorrect"
+					template = "views/index"
+				}
+			} else {
+				context["msg_title"] = "Login Error."
+				context["msg_body"] = "Username or password not supplied"
+				template = "views/index"
+			}
+			response.render(template: template, context: context)
 		}
 	}
 
@@ -127,7 +160,19 @@ class WebHandlers {
 					if let p1 = request.param(name: "p1"), !(p1 as String).isEmpty,
 						let p2 = request.param(name: "p2"), !(p2 as String).isEmpty,
 						p1 == p2 {
-						acc.password = BCrypt.hash(password: p1)
+
+						if let digestBytes = p1.digest(.sha256),
+							let hexBytes = digestBytes.encode(.hex),
+							let hexBytesStr = String(validatingUTF8: hexBytes) {
+							print(hexBytesStr)
+							acc.password = hexBytesStr
+
+//							let digestBytes2 = p1.digest(.sha256)
+//							let hexBytes2 = digestBytes2?.encode(.hex)
+//							let hexBytesStr2 = String(validatingUTF8: hexBytes2!)
+//							print(hexBytesStr2)
+						}
+//						acc.password = BCrypt.hash(password: p1)
 						acc.usertype = .standard
 						do {
 							try acc.save()

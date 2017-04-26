@@ -82,7 +82,30 @@ public class Account: PostgresStORM {
 
 		return .noError
 	}
+	
+	// Register User
+	public static func login(_ u: String, _ p: String) throws -> Account {
+		if let digestBytes = p.digest(.sha256),
+			let hexBytes = digestBytes.encode(.hex),
+			let hexBytesStr = String(validatingUTF8: hexBytes) {
 
+			let acc = Account()
+			let criteria = ["username":u,"password":hexBytesStr]
+			do {
+				try acc.find(criteria)
+				if acc.usertype == .provisional {
+					throw OAuth2ServerError.loginError
+				}
+				return acc
+			} catch {
+				print(error)
+				throw OAuth2ServerError.loginError
+			}
+		} else {
+			throw OAuth2ServerError.loginError
+		}
+	}
+	
 
 
 }

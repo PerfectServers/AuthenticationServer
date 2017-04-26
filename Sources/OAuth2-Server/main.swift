@@ -23,6 +23,9 @@ import PerfectHTTPServer
 import PerfectRequestLogger
 import PerfectSession
 import PerfectSessionPostgreSQL
+import PerfectCrypto
+
+let _ = PerfectCrypto.isInitialized
 
 #if os(Linux)
 	let fileRoot = "/perfect-deployed/oauth2-server/"

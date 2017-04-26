@@ -72,3 +72,4 @@ buildlinux
 *.log
 StORMlog.txt
 ApplicationConfiguration.json
+Package.pins

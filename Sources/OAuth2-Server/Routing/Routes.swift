@@ -12,6 +12,7 @@ func mainRoutes() -> [[String: Any]] {
 
 	var routes: [[String: Any]] = [[String: Any]]()
 	routes.append(["method":"get", "uri":"/", "handler":WebHandlers.main])
+	routes.append(["method":"post", "uri":"/login", "handler":WebHandlers.login])
 	routes.append(["method":"get", "uri":"/logout", "handler":WebHandlers.logout])
 
 	routes.append(["method":"get", "uri":"/register", "handler":WebHandlers.register])
